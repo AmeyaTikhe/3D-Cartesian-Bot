@@ -44,8 +44,22 @@ rmt_encoder_handle_t decel_motor_encoder_x = NULL;
 rmt_encoder_handle_t decel_motor_encoder_y = NULL;
 rmt_encoder_handle_t decel_motor_encoder_z = NULL;
 
-void move_to_position(int x_target, int y_target, uint32_t speed_freq, rmt_transmit_config_t *tx_config_x, rmt_transmit_config_t *tx_config_y) 
+void move_to_position(int x_target, int y_target) 
 {
+    rmt_transmit_config_t tx_config_x = {
+        .loop_count = 0,
+    };
+    rmt_transmit_config_t tx_config_y = {
+        .loop_count = 0,
+    };
+    rmt_transmit_config_t tx_config_z = {
+        .loop_count = 0,
+    };
+
+    const static uint32_t accel_samples = 500;
+    const static uint32_t uniform_speed_hz = 500;
+    const static uint32_t decel_samples = 500;
+
     int x_current = 0, y_current = 0;  // Assuming starting position is (0,0)
     int dx = abs(x_target - x_current);
     int dy = abs(y_target - y_current);
@@ -62,7 +76,7 @@ void move_to_position(int x_target, int y_target, uint32_t speed_freq, rmt_trans
             x_current += sx;
             gpio_set_level(STEP_MOTOR_GPIO_DIR_x, sx > 0 ? STEP_MOTOR_SPIN_DIR_CLOCKWISE : STEP_MOTOR_SPIN_DIR_COUNTERCLOCKWISE);
             // gpio_set_level(STEP_MOTOR_GPIO_STEP_x, 1);
-            ESP_ERROR_CHECK(rmt_transmit(motor_chan_x, uniform_motor_encoder_x, &speed_freq, sizeof(speed_freq), tx_config_x));
+            ESP_ERROR_CHECK(rmt_transmit(motor_chan_x, uniform_motor_encoder_x, &uniform_speed_hz, sizeof(uniform_speed_hz), &tx_config_x));
             vTaskDelay(pdMS_TO_TICKS(10));  // Small delay
             gpio_set_level(STEP_MOTOR_GPIO_STEP_x, 0);
         }
@@ -72,7 +86,7 @@ void move_to_position(int x_target, int y_target, uint32_t speed_freq, rmt_trans
             y_current += sy;
             gpio_set_level(STEP_MOTOR_GPIO_DIR_y, sy > 0 ? STEP_MOTOR_SPIN_DIR_CLOCKWISE : STEP_MOTOR_SPIN_DIR_COUNTERCLOCKWISE);
             // gpio_set_level(STEP_MOTOR_GPIO_STEP_y, 1);
-            ESP_ERROR_CHECK(rmt_transmit(motor_chan_y, uniform_motor_encoder_y, &speed_freq, sizeof(speed_freq), tx_config_y));
+            ESP_ERROR_CHECK(rmt_transmit(motor_chan_y, uniform_motor_encoder_y, &uniform_speed_hz, sizeof(uniform_speed_hz), &tx_config_y));
             vTaskDelay(pdMS_TO_TICKS(10));  // Small delay
             gpio_set_level(STEP_MOTOR_GPIO_STEP_y, 0);
         }
@@ -206,22 +220,9 @@ void app_main(void)
     ESP_LOGI(TAG, "Enable step motor"); //REVISIT TO CHECK IF NEEDS TO BE TRIPLED
     gpio_set_level(STEP_MOTOR_GPIO_EN, STEP_MOTOR_ENABLE_LEVEL);
 
-    rmt_transmit_config_t tx_config_x = {
-        .loop_count = 0,
-    };
-    rmt_transmit_config_t tx_config_y = {
-        .loop_count = 0,
-    };
-    rmt_transmit_config_t tx_config_z = {
-        .loop_count = 0,
-    };
 
-    const static uint32_t accel_samples = 500;
-    const static uint32_t uniform_speed_hz = 500;
-    const static uint32_t decel_samples = 500;
-
-    move_to_position(10, 20, uniform_speed_hz, &tx_config_x, &tx_config_y);  // Replace with actual coordinates
+    move_to_position(10, 20);  // Replace with actual coordinates
 
     // Move to second target position (x2, y2)
-    move_to_position(30, 40, uniform_speed_hz, &tx_config_x, &tx_config_y);  // Replace with actual coordinates
+    move_to_position(30, 40);  // Replace with actual coordinates
 }
