@@ -1,7 +1,7 @@
 {
     "version":            "1.1",
     "project_name":       "StepperMotor",
-    "project_version":    "1",
+    "project_version":    "4c2fb1d-dirty",
     "project_path":       "C:/Users/ameya/Desktop/StepperMotor",
     "idf_path":           "C:/Espressif/frameworks/esp-idf-v5.4",
     "build_dir":          "C:/Users/ameya/Desktop/StepperMotor/build",
@@ -1195,8 +1195,8 @@
             "managed_reqs": [],
             "managed_priv_reqs": [],
             "file": "C:/Users/ameya/Desktop/StepperMotor/build/esp-idf/main/libmain.a",
-            "sources": [ "C:/Users/ameya/Desktop/StepperMotor/main/stepper_motor_example_new.c", "C:/Users/ameya/Desktop/StepperMotor/main/stepper_motor_example_main.c", "C:/Users/ameya/Desktop/StepperMotor/main/stepper_motor_encoder.c" ],
-            "include_dirs": [ "." ]
+            "sources": [ "C:/Users/ameya/Desktop/StepperMotor/main/stepper_motor_example_v3.c", "C:/Users/ameya/Desktop/StepperMotor/main/stepper_motor_encoder.c" ],
+            "include_dirs": [ "include" ]
         },
         "mbedtls": {
             "alias": "idf::mbedtls",
@@ -2845,7 +2845,7 @@
             "priv_reqs": [],
             "managed_reqs": [],
             "managed_priv_reqs": [],
-            "include_dirs": [ "." ]
+            "include_dirs": [ "include" ]
         }
     },
     "debug_prefix_map_gdbinit": ""
