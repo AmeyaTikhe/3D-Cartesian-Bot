@@ -76,6 +76,7 @@ void move_to_position(int x_target, int y_target)
             x_current += sx;
             gpio_set_level(STEP_MOTOR_GPIO_DIR_x, sx > 0 ? STEP_MOTOR_SPIN_DIR_CLOCKWISE : STEP_MOTOR_SPIN_DIR_COUNTERCLOCKWISE);
             // gpio_set_level(STEP_MOTOR_GPIO_STEP_x, 1);
+            tx_config_x.loop_count = 0;
             ESP_ERROR_CHECK(rmt_transmit(motor_chan_x, uniform_motor_encoder_x, &uniform_speed_hz, sizeof(uniform_speed_hz), &tx_config_x));
             vTaskDelay(pdMS_TO_TICKS(10));  // Small delay
             gpio_set_level(STEP_MOTOR_GPIO_STEP_x, 0);
@@ -86,6 +87,7 @@ void move_to_position(int x_target, int y_target)
             y_current += sy;
             gpio_set_level(STEP_MOTOR_GPIO_DIR_y, sy > 0 ? STEP_MOTOR_SPIN_DIR_CLOCKWISE : STEP_MOTOR_SPIN_DIR_COUNTERCLOCKWISE);
             // gpio_set_level(STEP_MOTOR_GPIO_STEP_y, 1);
+            tx_config_y.loop_count = 0;
             ESP_ERROR_CHECK(rmt_transmit(motor_chan_y, uniform_motor_encoder_y, &uniform_speed_hz, sizeof(uniform_speed_hz), &tx_config_y));
             vTaskDelay(pdMS_TO_TICKS(10));  // Small delay
             gpio_set_level(STEP_MOTOR_GPIO_STEP_y, 0);

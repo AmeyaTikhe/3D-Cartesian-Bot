@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Dot Coordinates</title>
+    <style>
+        html {
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            align-content: center;
+            text-align: center;
+            background-color: #ffffff;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        #coordinate-list {
+            width: 90%;
+            margin: auto;
+            padding: 10px;
+            background: rgb(0, 0, 0);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            text-align: left;
+            color: greenyellow;
+            height: 300px; 
+            overflow-y: auto;
+            overflow-x: auto;
+        }
+        
+        .dot {
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>TERMINAL</h1>
+    <div id = display>
+    <div id="coordinate-list"></div>
+    </div>
+    
+    <script>
+        // const socket = new WebSocket("ws://localhost:9000"); // Change port if needed
+        function connectWebSocket() {
+            const socket = new WebSocket("ws://localhost:9000");
+            const coordinateList = document.getElementById("coordinate-list");
+        
+            socket.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                const dotDiv = document.createElement("div");
+                dotDiv.classList.add("dot");
+                dotDiv.textContent = `DOT ${data.id}: X=${data.x}, Y=${data.y}`;
+                coordinateList.appendChild(dotDiv);
+            };
+        
+            socket.onopen = function() {
+                console.log("Connected to WebSocket server");
+            };
+        
+            socket.onclose = function() {
+                console.log("WebSocket closed. Reconnecting in 2 seconds...");
+                setTimeout(connectWebSocket, 2000); // Retry connection
+            };
+        
+            socket.onerror = function(error) {
+                console.log("WebSocket Error: ", error);
+                socket.close(); // Close the socket and retry
+            };
+        }
+        
+        connectWebSocket(); // Start WebSocket connection
+        
+        const coordinateList = document.getElementById("coordinate-list");
+
+        socket.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            const dotDiv = document.createElement("div");
+            dotDiv.classList.add("dot");
+            dotDiv.textContent = `DOT ${data.id}: X=${data.x}, Y=${data.y}`;
+            coordinateList.appendChild(dotDiv);
+        };
+
+        socket.onopen = function() {
+            console.log("Connected to WebSocket server");
+        };
+
+        socket.onerror = function(error) {
+            console.log("WebSocket Error: ", error);
+        };
+    </script>
+</body>
+</html>

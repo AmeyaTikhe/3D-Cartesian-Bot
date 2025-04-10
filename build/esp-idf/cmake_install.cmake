@@ -549,6 +549,21 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
+  include("C:/Users/ameya/Desktop/StepperMotor/build/esp-idf/espressif__esp_websocket_client/cmake_install.cmake")
+endif()
+
+if(NOT CMAKE_INSTALL_LOCAL_ONLY)
+  # Include the install script for the subdirectory.
+  include("C:/Users/ameya/Desktop/StepperMotor/build/esp-idf/espressif__mdns/cmake_install.cmake")
+endif()
+
+if(NOT CMAKE_INSTALL_LOCAL_ONLY)
+  # Include the install script for the subdirectory.
   include("C:/Users/ameya/Desktop/StepperMotor/build/esp-idf/main/cmake_install.cmake")
+endif()
+
+if(NOT CMAKE_INSTALL_LOCAL_ONLY)
+  # Include the install script for the subdirectory.
+  include("C:/Users/ameya/Desktop/StepperMotor/build/esp-idf/sra-board-component/cmake_install.cmake")
 endif()
 

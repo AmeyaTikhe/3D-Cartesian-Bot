@@ -1,0 +1,225 @@
+#include "tuning_http_server.h"
+#include "cJSON.h"
+#include "esp_http_server.h"
+// #include <inttypes.h>
+extern void handle_raw_coordinates(const char *json_str);
+
+static const char *TAG = "websocket_server";
+
+static comms_val_t comms_val = { .forward = false, .backward = false, .front_right = false, .front_left = false, .back_right = false, .back_left = false, .clockwise = false, .anticlockwise = false, .val_changed = false };
+
+static QueueHandle_t client_queue;
+const static int client_queue_size = 10;
+
+static void initialise_mdns(void)
+{
+    mdns_init();
+    mdns_hostname_set(MDNS_HOST_NAME);
+    mdns_instance_name_set(MDNS_INSTANCE);
+
+    mdns_txt_item_t serviceTxtData[] = {
+        {"board", "esp32"},
+        {"path", "/"}};
+
+    ESP_ERROR_CHECK(mdns_service_add("ESP32-WebServer", "_http", "_tcp", 80, serviceTxtData,
+                                     sizeof(serviceTxtData) / sizeof(serviceTxtData[0])));
+}
+
+//websocket callback function
+
+static void http_server(struct netconn *conn)
+{
+    const static char HTML_HEADER[] = "HTTP/1.1 200 OK\nContent-type: text/html\n\n";
+
+    struct netbuf *inbuf;
+    static char *buf;
+    static uint16_t buflen;
+    static err_t err;
+
+    // default page
+    extern const uint8_t root_html_start[] asm("_binary_index_html_start");
+    extern const uint8_t root_html_end[] asm("_binary_index_html_end");
+    const uint32_t root_html_len = root_html_end - root_html_start;
+
+    netconn_set_recvtimeout(conn, 1000); // allow a connection timeout of 1 second
+    ESP_LOGI(TAG, "reading from client...");
+    err = netconn_recv(conn, &inbuf);
+    ESP_LOGI(TAG, "read from client");
+    if (err == ERR_OK)
+    {
+        netbuf_data(inbuf, (void **)&buf, &buflen);
+        if (buf)
+        {
+            // default page
+            if (strstr(buf, "GET / ") && !strstr(buf, "Upgrade: websocket"))
+            {
+                ESP_LOGI(TAG, "Sending /");
+                netconn_write(conn, HTML_HEADER, sizeof(HTML_HEADER) - 1, NETCONN_NOCOPY);
+                netconn_write(conn, root_html_start, root_html_len, NETCONN_NOCOPY);
+                netconn_close(conn);
+                netconn_delete(conn);
+                netbuf_delete(inbuf);
+            }
+
+            // default page websocket
+            else if (strstr(buf, "GET / ") && strstr(buf, "Upgrade: websocket"))
+            {
+                ESP_LOGI(TAG, "Requesting websocket on /");
+                ws_server_add_client(conn, buf, buflen, "/", websocket_callback);
+                netbuf_delete(inbuf);
+            }
+
+            else
+            {
+                ESP_LOGI(TAG, "Unknown request");
+                netconn_close(conn);
+                netconn_delete(conn);
+                netbuf_delete(inbuf);
+            }
+        }
+        else
+        {
+            ESP_LOGI(TAG, "Unknown request (empty?...)");
+            netconn_close(conn);
+            netconn_delete(conn);
+            netbuf_delete(inbuf);
+        }
+    }
+    else
+    { // if err==ERR_OK
+        ESP_LOGI(TAG, "error on read, closing connection");
+        netconn_close(conn);
+        netconn_delete(conn);
+        netbuf_delete(inbuf);
+    }
+}
+
+static void server_task(void *pvParameters)
+{
+    // const static char *TAG = "server_task";
+    struct netconn *conn, *newconn;
+    static err_t err;
+    client_queue = xQueueCreate(client_queue_size, sizeof(struct netconn *));
+
+    conn = netconn_new(NETCONN_TCP);
+    netconn_bind(conn, NULL, 80);
+    netconn_listen(conn);
+    ESP_LOGI(TAG, "server listening");
+    do
+    {
+        err = netconn_accept(conn, &newconn);
+        ESP_LOGI(TAG, "new client");
+        if (err == ERR_OK)
+        {
+            xQueueSendToBack(client_queue, &newconn, portMAX_DELAY);
+            // http_serve(newconn);
+        }
+        vTaskDelay(10);
+    } while (err == ERR_OK);
+    netconn_close(conn);
+    netconn_delete(conn);
+    ESP_LOGE(TAG, "task ending, rebooting board");
+    esp_restart();
+}
+
+// receives clients from queue, handles them
+static void server_handle_task(void *pvParameters)
+{
+    // const static char *TAG = "server_handle_task";
+    struct netconn *conn;
+    ESP_LOGI(TAG, "task starting");
+    for (;;)
+    {
+        xQueueReceive(client_queue, &conn, portMAX_DELAY);
+        if (!conn)
+            continue;
+        http_server(conn);
+        vTaskDelay(10);
+    }
+    vTaskDelete(NULL);
+}
+
+comms_val_t read_comms()
+{
+    return comms_val;
+}
+
+void reset_val_changed_coms(){
+    comms_val.val_changed = false;
+}
+
+esp_err_t coords_post_handler(httpd_req_t *req)
+{
+    static char content[256];  // Buffer to hold incoming JSON
+    int total_len = req->content_len;
+    int received = 0;
+
+    while (received < total_len) {
+        int ret = httpd_req_recv(req, content + received, total_len - received);
+        if (ret <= 0) {
+            return ESP_FAIL;
+        }
+        received += ret;
+    }
+    content[received] = '\0'; // Null-terminate for string handling
+
+    ESP_LOGI(TAG, "Raw coordinate data received: %s", content);
+
+    // Send the raw JSON string to your own function in stepper_motor_ws_v2.c
+    handle_raw_coordinates(content); // you will implement this
+
+    httpd_resp_sendstr(req, "Coordinates received");
+    return ESP_OK;
+}
+
+void start_websocket_server()
+{
+    ESP_ERROR_CHECK(nvs_flash_init());
+    ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+    initialise_mdns();
+    netbiosns_init();
+    netbiosns_set_name(MDNS_HOST_NAME);
+
+    connect_to_wifi();
+
+    httpd_handle_t server = NULL;
+    //httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+    httpd_config_t config = {
+        .task_priority      = tskIDLE_PRIORITY+5,
+        .stack_size         = 4096,
+        .core_id            = tskNO_AFFINITY,
+        .server_port        = 8080,            // <-- ✅ This is the line you want!
+        .ctrl_port          = 32768,
+        .max_open_sockets   = 7,
+        .max_uri_handlers   = 8,
+        .max_resp_headers   = 8,
+        .backlog_conn       = 5,
+        .lru_purge_enable   = false,
+        .recv_wait_timeout  = 5,
+        .send_wait_timeout  = 5,
+        .global_user_ctx    = NULL,
+        .global_user_ctx_free_fn = NULL,
+        .global_transport_ctx = NULL,
+        .global_transport_ctx_free_fn = NULL,
+        .open_fn            = NULL,
+        .close_fn           = NULL,
+        .uri_match_fn       = httpd_uri_match_wildcard,
+    };
+    
+    httpd_start(&server, &config);
+
+    httpd_uri_t coords_uri = {
+        .uri       = "/update_coords",
+        .method    = HTTP_POST,
+        .handler   = coords_post_handler,
+        .user_ctx  = NULL
+    };
+
+    httpd_register_uri_handler(server, &coords_uri);
+
+    // ESP_ERROR_CHECK(init_fs());
+    ws_server_start();
+    xTaskCreate(&server_task, "server_task", 3000, NULL, 9, NULL);
+    xTaskCreate(&server_handle_task, "server_handle_task", 4000, NULL, 6, NULL);
+}
