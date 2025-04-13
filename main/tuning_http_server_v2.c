@@ -10,7 +10,7 @@ static comms_val_t comms_val = { .x_coord = 0, .y_coord = 0, .z_coord = 0, .val_
 // static QueueHandle_t client_queue;
 // const static int client_queue_size = 10;
 
-extern void handle_raw_coordinates(const char *json_str);
+// extern void handle_raw_coordinates(const char *json_str);
 
 static void initialise_mdns(void)
 {
@@ -247,15 +247,4 @@ void start_http_server()
     // ws_server_start();
     // xTaskCreate(&server_task, "server_task", 3000, NULL, 9, NULL);
     // xTaskCreate(&server_handle_task, "server_handle_task", 4000, NULL, 6, NULL);
-}
-
-// Communication helpers
-comms_val_t read_comms()
-{
-    return comms_val;
-}
-
-void reset_val_changed_coms()
-{
-    comms_val.val_changed = false;
 }

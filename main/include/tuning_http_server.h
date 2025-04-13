@@ -40,5 +40,6 @@ typedef struct comms_val
 comms_val_t read_comms();
 void reset_val_changed_coms();
 void start_http_server();
+extern cJSON *handle_raw_coordinates();
 
 #endif
