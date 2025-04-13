@@ -4900,6 +4900,70 @@
                 "children": [
                     {
                         "children": [],
+                        "depends_on": null,
+                        "help": "SSID (network name) for the example to connect to.",
+                        "id": "WIFI_SSID",
+                        "name": "WIFI_SSID",
+                        "range": null,
+                        "title": "WiFi SSID",
+                        "type": "string"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "WiFi password (WPA or WPA2) for the example to use.",
+                        "id": "WIFI_PASSWORD",
+                        "name": "WIFI_PASSWORD",
+                        "range": null,
+                        "title": "WiFi Password",
+                        "type": "string"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Set the Maximum retry to avoid station reconnecting to the AP unlimited when the AP is really inexistent.",
+                        "id": "MAXIMUM_RETRY",
+                        "name": "MAXIMUM_RETRY",
+                        "range": null,
+                        "title": "Maximum retry",
+                        "type": "int"
+                    }
+                ],
+                "depends_on": null,
+                "id": "wall-e-configuration-wifi-config",
+                "title": "WiFi Config",
+                "type": "menu"
+            },
+            {
+                "children": [
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "mDNS hostname used to access the tuning webpage, it should be less than 15 chars",
+                        "id": "MDNS_HOST_NAME",
+                        "name": "MDNS_HOST_NAME",
+                        "range": null,
+                        "title": "mDNS host name (< 15 chars)",
+                        "type": "string"
+                    }
+                ],
+                "depends_on": null,
+                "id": "wall-e-configuration-mdns-config",
+                "title": "mDNS Config",
+                "type": "menu"
+            }
+        ],
+        "depends_on": null,
+        "id": "wall-e-configuration",
+        "title": "Wall-E Configuration",
+        "type": "menu"
+    },
+    {
+        "children": [
+            {
+                "children": [
+                    {
+                        "children": [],
                         "depends_on": "<choice COMPILER_OPTIMIZATION>",
                         "help": null,
                         "id": "COMPILER_OPTIMIZATION_DEBUG",
@@ -29650,6 +29714,100 @@
                 "depends_on": null,
                 "id": "component-config-sra-board-component-config",
                 "title": "SRA Board Component Config",
+                "type": "menu"
+            },
+            {
+                "children": [
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Maximum number of clients that the WebSocket\nserver can handle at a time.",
+                        "id": "WEBSOCKET_SERVER_MAX_CLIENTS",
+                        "name": "WEBSOCKET_SERVER_MAX_CLIENTS",
+                        "range": [
+                            1,
+                            1000
+                        ],
+                        "title": "Max clients",
+                        "type": "int"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Size of the queue to deal with incoming\nWebSocket messages. The queue holds the\nconnection, not the actual message.",
+                        "id": "WEBSOCKET_SERVER_QUEUE_SIZE",
+                        "name": "WEBSOCKET_SERVER_QUEUE_SIZE",
+                        "range": [
+                            1,
+                            100
+                        ],
+                        "title": "Queue read size",
+                        "type": "int"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Timeout for adding new connections to the\nread queue.",
+                        "id": "WEBSOCKET_SERVER_QUEUE_TIMEOUT",
+                        "name": "WEBSOCKET_SERVER_QUEUE_TIMEOUT",
+                        "range": [
+                            0,
+                            10000
+                        ],
+                        "title": "Queue timeout",
+                        "type": "int"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Stack depth for the WebSocket server. The task\nhandles reads.",
+                        "id": "WEBSOCKET_SERVER_TASK_STACK_DEPTH",
+                        "name": "WEBSOCKET_SERVER_TASK_STACK_DEPTH",
+                        "range": [
+                            3000,
+                            20000
+                        ],
+                        "title": "Stack depth",
+                        "type": "int"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Priority for the WebSocket server. The task\nhandles reads.",
+                        "id": "WEBSOCKET_SERVER_TASK_PRIORITY",
+                        "name": "WEBSOCKET_SERVER_TASK_PRIORITY",
+                        "range": [
+                            1,
+                            20
+                        ],
+                        "title": "Priority",
+                        "type": "int"
+                    },
+                    {
+                        "children": [
+                            {
+                                "children": [],
+                                "depends_on": "WEBSOCKET_SERVER_PINNED",
+                                "help": "Core that the WebSocket server is pinned to.\nThe task handles reads.",
+                                "id": "WEBSOCKET_SERVER_PINNED_CORE",
+                                "name": "WEBSOCKET_SERVER_PINNED_CORE",
+                                "range": null,
+                                "title": "Pinned core",
+                                "type": "int"
+                            }
+                        ],
+                        "depends_on": null,
+                        "help": "Pin the WebSocket server task to a specific core.\nThe task handles reads.",
+                        "id": "WEBSOCKET_SERVER_PINNED",
+                        "name": "WEBSOCKET_SERVER_PINNED",
+                        "range": null,
+                        "title": "Server pinned to core",
+                        "type": "bool"
+                    }
+                ],
+                "depends_on": null,
+                "id": "component-config-websocket-server",
+                "title": "WebSocket Server",
                 "type": "menu"
             },
             {

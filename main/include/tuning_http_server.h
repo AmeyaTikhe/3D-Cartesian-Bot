@@ -31,14 +31,9 @@
 
 typedef struct comms_val
 {
-    bool forward;
-    bool backward;
-    bool front_left;
-    bool front_right;
-    bool back_left;
-    bool back_right;
-    bool clockwise;
-    bool anticlockwise;
+    int x_coord;
+    int y_coord;
+    int z_coord;
     bool val_changed;
 } comms_val_t;
 

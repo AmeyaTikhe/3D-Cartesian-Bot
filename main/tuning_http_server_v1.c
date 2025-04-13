@@ -6,7 +6,7 @@ extern void handle_raw_coordinates(const char *json_str);
 
 static const char *TAG = "websocket_server";
 
-static comms_val_t comms_val = { .forward = false, .backward = false, .front_right = false, .front_left = false, .back_right = false, .back_left = false, .clockwise = false, .anticlockwise = false, .val_changed = false };
+static comms_val_t comms_val = { .x_coord = 0, .y_coord = 0, .z_coord = 0, .val_changed = false };
 
 static QueueHandle_t client_queue;
 const static int client_queue_size = 10;
@@ -26,6 +26,40 @@ static void initialise_mdns(void)
 }
 
 //websocket callback function
+
+void websocket_callback(uint8_t num, WEBSOCKET_TYPE_t type, char *msg, uint64_t len)
+{
+    if (type == WEBSOCKET_TEXT && len > 0)
+    {
+        char *msg_copy = malloc(len + 1);
+        if (!msg_copy) {
+            ESP_LOGE(TAG, "Memory allocation failed");
+            return;
+        }
+
+        memcpy(msg_copy, msg, len);
+        msg_copy[len] = '\0'; // ensure null-terminated
+
+        ESP_LOGI(TAG, "Raw coordinate data received via WebSocket: %s", msg_copy);
+
+        cJSON *json = cJSON_Parse(msg_copy);
+        free(msg_copy); // free after parsing
+        if (json == NULL) {
+            ESP_LOGE(TAG, "Failed to parse JSON");
+            return;
+        }
+
+        cJSON *x_val = cJSON_GetObjectItem(json, "x");
+        cJSON *y_val = cJSON_GetObjectItem(json, "y");
+
+        if (cJSON_IsNumber(x_val)) comms_val.x_coord = x_val->valueint;
+        if (cJSON_IsNumber(y_val)) comms_val.y_coord = y_val->valueint;
+
+        comms_val.val_changed = true;
+
+        cJSON_Delete(json);
+    }
+}
 
 static void http_server(struct netconn *conn)
 {
@@ -148,29 +182,29 @@ void reset_val_changed_coms(){
     comms_val.val_changed = false;
 }
 
-esp_err_t coords_post_handler(httpd_req_t *req)
-{
-    static char content[256];  // Buffer to hold incoming JSON
-    int total_len = req->content_len;
-    int received = 0;
+// esp_err_t coords_post_handler(httpd_req_t *req)
+// {
+//     static char content[256];  // Buffer to hold incoming JSON
+//     int total_len = req->content_len;
+//     int received = 0;
 
-    while (received < total_len) {
-        int ret = httpd_req_recv(req, content + received, total_len - received);
-        if (ret <= 0) {
-            return ESP_FAIL;
-        }
-        received += ret;
-    }
-    content[received] = '\0'; // Null-terminate for string handling
+//     while (received < total_len) {
+//         int ret = httpd_req_recv(req, content + received, total_len - received);
+//         if (ret <= 0) {
+//             return ESP_FAIL;
+//         }
+//         received += ret;
+//     }
+//     content[received] = '\0'; // Null-terminate for string handling
 
-    ESP_LOGI(TAG, "Raw coordinate data received: %s", content);
+//     ESP_LOGI(TAG, "Raw coordinate data received: %s", content);
 
-    // Send the raw JSON string to your own function in stepper_motor_ws_v2.c
-    handle_raw_coordinates(content); // you will implement this
+//     // Send the raw JSON string to your own function in stepper_motor_ws_v2.c
+//     handle_raw_coordinates(content); // you will implement this
 
-    httpd_resp_sendstr(req, "Coordinates received");
-    return ESP_OK;
-}
+//     httpd_resp_sendstr(req, "Coordinates received");
+//     return ESP_OK;
+// }
 
 void start_websocket_server()
 {
@@ -182,41 +216,6 @@ void start_websocket_server()
     netbiosns_set_name(MDNS_HOST_NAME);
 
     connect_to_wifi();
-
-    httpd_handle_t server = NULL;
-    //httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-    httpd_config_t config = {
-        .task_priority      = tskIDLE_PRIORITY+5,
-        .stack_size         = 4096,
-        .core_id            = tskNO_AFFINITY,
-        .server_port        = 8080,            // <-- ✅ This is the line you want!
-        .ctrl_port          = 32768,
-        .max_open_sockets   = 7,
-        .max_uri_handlers   = 8,
-        .max_resp_headers   = 8,
-        .backlog_conn       = 5,
-        .lru_purge_enable   = false,
-        .recv_wait_timeout  = 5,
-        .send_wait_timeout  = 5,
-        .global_user_ctx    = NULL,
-        .global_user_ctx_free_fn = NULL,
-        .global_transport_ctx = NULL,
-        .global_transport_ctx_free_fn = NULL,
-        .open_fn            = NULL,
-        .close_fn           = NULL,
-        .uri_match_fn       = httpd_uri_match_wildcard,
-    };
-    
-    httpd_start(&server, &config);
-
-    httpd_uri_t coords_uri = {
-        .uri       = "/update_coords",
-        .method    = HTTP_POST,
-        .handler   = coords_post_handler,
-        .user_ctx  = NULL
-    };
-
-    httpd_register_uri_handler(server, &coords_uri);
 
     // ESP_ERROR_CHECK(init_fs());
     ws_server_start();

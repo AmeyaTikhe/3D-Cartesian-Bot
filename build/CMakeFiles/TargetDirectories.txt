@@ -852,3 +852,10 @@ C:/Users/ameya/Desktop/StepperMotor/build/esp-idf/sra-board-component/CMakeFiles
 C:/Users/ameya/Desktop/StepperMotor/build/esp-idf/sra-board-component/CMakeFiles/install.dir
 C:/Users/ameya/Desktop/StepperMotor/build/esp-idf/sra-board-component/CMakeFiles/install/local.dir
 C:/Users/ameya/Desktop/StepperMotor/build/esp-idf/sra-board-component/CMakeFiles/install/strip.dir
+C:/Users/ameya/Desktop/StepperMotor/build/esp-idf/websocket_server/CMakeFiles/__idf_websocket_server.dir
+C:/Users/ameya/Desktop/StepperMotor/build/esp-idf/websocket_server/CMakeFiles/edit_cache.dir
+C:/Users/ameya/Desktop/StepperMotor/build/esp-idf/websocket_server/CMakeFiles/rebuild_cache.dir
+C:/Users/ameya/Desktop/StepperMotor/build/esp-idf/websocket_server/CMakeFiles/list_install_components.dir
+C:/Users/ameya/Desktop/StepperMotor/build/esp-idf/websocket_server/CMakeFiles/install.dir
+C:/Users/ameya/Desktop/StepperMotor/build/esp-idf/websocket_server/CMakeFiles/install/local.dir
+C:/Users/ameya/Desktop/StepperMotor/build/esp-idf/websocket_server/CMakeFiles/install/strip.dir

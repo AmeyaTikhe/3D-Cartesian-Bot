@@ -121,7 +121,7 @@ void receive_coordinates(int x, int y) {
     ESP_LOGI("Stepper", "Received Coordinates: X=%d, Y=%d", x, y);
 
     // Your logic to move to (x, y)
-    move_to_coordinates(x, y);  // Replace with actual function
+    move_to_position(x, y);  // Replace with actual function
 }
 
 void setup_motors(void) 

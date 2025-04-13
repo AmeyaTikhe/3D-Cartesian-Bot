@@ -16,7 +16,7 @@ if("${CONFIG}" STREQUAL "" OR "${CONFIG}" STREQUAL "")
   "flash_bootloader_args"
   "flash_project_args"
   "flasher_args.json"
-  "index_esp.html.S"
+  "index.html.S"
   "ldgen_libraries"
   "ldgen_libraries.in"
   "project_elf_src_esp32.c"
