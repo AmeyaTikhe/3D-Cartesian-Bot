@@ -63,7 +63,7 @@ rmt_encoder_handle_t decel_motor_encoder_z = NULL;
 
 int x_current = 0, y_current = 0;  // Assuming starting position is (0,0)
 
-void move_to_position(int x_target, int y_target) 
+extern void move_to_position(int x_target, int y_target) 
 {
     rmt_transmit_config_t tx_config_x = {
         .loop_count = 0,
@@ -117,11 +117,48 @@ void move_to_position(int x_target, int y_target)
     }
 }
 
-void receive_coordinates(int x, int y) {
-    ESP_LOGI("Stepper", "Received Coordinates: X=%d, Y=%d", x, y);
+cJSON *handle_raw_coordinates(const char *json_str)
+{
+    cJSON *root = cJSON_Parse(json_str);
+    if (!root) {
+        ESP_LOGE("HANDLE_COORD", "JSON root parse failed");
+        return NULL;
+    }
 
-    // Your logic to move to (x, y)
-    move_to_position(x, y);  // Replace with actual function
+    cJSON *coord_array = cJSON_GetObjectItem(root, "coords");
+    if (!cJSON_IsArray(coord_array)) {
+        ESP_LOGE("HANDLE_COORD", "coords is not a valid array");
+        cJSON_Delete(root);
+        return NULL;
+    }
+
+    cJSON *ack_list = cJSON_CreateArray();
+    cJSON *item;
+    int index = 0;
+
+    cJSON_ArrayForEach(item, coord_array) {
+        cJSON *x = cJSON_GetObjectItem(item, "x");
+        cJSON *y = cJSON_GetObjectItem(item, "y");
+
+        if (cJSON_IsNumber(x) && cJSON_IsNumber(y)) {
+            int x_val = x->valueint;
+            int y_val = y->valueint;
+
+            ESP_LOGI("HANDLE_COORD", "Moving to (%d, %d)", x_val, y_val);
+            move_to_position(x_val, y_val);  // Move motors
+
+            char ack_msg[64];
+            snprintf(ack_msg, sizeof(ack_msg), "Reached (%d, %d)", x_val, y_val);
+            cJSON_AddItemToArray(ack_list, cJSON_CreateString(ack_msg));
+        } else {
+            cJSON_AddItemToArray(ack_list, cJSON_CreateString("Invalid coordinate format"));
+        }
+
+        index++;
+    }
+
+    cJSON_Delete(root);
+    return ack_list;
 }
 
 void setup_motors(void) 
@@ -239,7 +276,7 @@ void setup_motors(void)
 
 void app_main(void)
 {
-    start_websocket_server();
+    start_http_server();
     setup_motors();
 
     ESP_LOGI(TAG, "Set spin direction");

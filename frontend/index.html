@@ -88,8 +88,15 @@
               body: JSON.stringify(coords)
             })
             .then(response => response.text())
+            // .then(data => {
+            //  console.log('ESP32 response:', data);
+            // })
             .then(data => {
-              console.log('ESP32 response:', data);
+                data.forEach((ackMsg, i) => {
+                  const ackDiv = document.createElement("div");
+                  ackDiv.textContent = `ACK ${i + 1}: ${ackMsg}`;
+                  document.getElementById("coordinate-list").appendChild(ackDiv);
+                });
             })
             .catch(error => {
               console.error('Error sending coordinates:', error);
