@@ -41978,7 +41978,7 @@ LOAD C:/Espressif/tools/xtensa-esp-elf/esp-14.2.0_20241119/xtensa-esp-elf/bin/..
  .rodata.event_handler.str1.4
                 0x3f411d96       0x7c esp-idf/main/libmain.a(wifi_handler.c.obj)
  .rodata.wifi_init_sta.str1.4
-                0x3f411d96      0x2e3 esp-idf/main/libmain.a(wifi_handler.c.obj)
+                0x3f411d96      0x2e1 esp-idf/main/libmain.a(wifi_handler.c.obj)
  *fill*         0x3f411d96        0x2 
  .rodata        0x3f411d98       0x20 esp-idf/main/libmain.a(wifi_handler.c.obj)
  .rodata.connect_to_wifi.str1.4
