@@ -277,7 +277,7 @@ void setup_motors(void)
 void app_main(void)
 {
     setup_motors();
-    start_http_server();
+    start_websocket_server();
 
     ESP_LOGI(TAG, "Set spin direction");
     gpio_set_level(STEP_MOTOR_GPIO_DIR_x, STEP_MOTOR_SPIN_DIR_CLOCKWISE);

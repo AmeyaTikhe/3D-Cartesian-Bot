@@ -51,45 +51,36 @@
 
         let coordQueue = [];
         let isWaitingForAck = false;
-
-        function logToDiv(message, color = 'greenyellow') {
-            const logDiv = document.createElement("div");
-            logDiv.textContent = message;
-            logDiv.style.color = color;
-            coordinateList.appendChild(logDiv);
-            coordinateList.scrollTop = coordinateList.scrollHeight;
-        }
         
         function connectOpenCVWebSocket() {
             socket = new WebSocket("ws://localhost:9000");
             const coordinateList = document.getElementById("coordinate-list");
         
             socket.onmessage = function(event) {
-                try {
                 const data = JSON.parse(event.data);
-                logToDiv(`Received: DOT X=${data.x}, Y=${data.y}`, 'cyan');
+                const dotDiv = document.createElement("div");
+                dotDiv.classList.add("dot");
+                dotDiv.textContent = `DOT ${data.id}: X=${data.x}, Y=${data.y}`;
+                coordinateList.appendChild(dotDiv);
+                coordinateList.scrollTop = coordinateList.scrollHeight;
 
                 // send coordinates to ESP via HTTP
+                //sendCoordinatesToESP({ x: data.x, y: data.y });
                 coordQueue.push({ x: data.x, y: data.y });
-                logToDiv(`Queued DOT at X=${data.x}, Y=${data.y}`, 'orange');
-                processNextCoordinate();  // Try to process if nothing is in progress  
-                }
-                catch (err) {
-                    logToDiv(`Error parsing message: ${event.data}`, 'red');
-                }  
+                processNextCoordinate();  // Try to process if nothing is in progress    
             };
         
             socket.onopen = function() {
-                logToDiv("Connected to WebSocket server", 'lime');
+                console.log("Connected to WebSocket server");
             };
         
             socket.onclose = function() {
-                logToDiv(" WebSocket closed. Reconnecting in 2 seconds...", 'gray');
+                console.log("WebSocket closed. Reconnecting in 2 seconds...");
                 setTimeout(connectOpenCVWebSocket, 2000); // Retry connection
             };
         
             socket.onerror = function(error) {
-                logToDiv(" WebSocket Error: " + error.message, 'red');
+                console.log("WebSocket Error: ", error);
                 socket.close(); // Close the socket and retry
             };
         }
@@ -99,18 +90,13 @@
     
             const coords = coordQueue.shift(); // Get the next one
             isWaitingForAck = true;
-
-            logToDiv(`DOT: X=${coords.x}, Y=${coords.y}`, 'white');
-
-            logToDiv(`Sending to ESP: X=${coords.x}, Y=${coords.y}`, 'yellow');
             sendCoordinatesToESP(coords);
         }
               
         function sendCoordinatesToESP(coords) {
             //fetch('/update_coords', {
             const ESP_IP = "192.168.183.123";
-
-            fetch("http://192.168.183.123/update_coords", {
+            fetch('http://<ESP_IP>:8080/update_coords', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json'
@@ -118,21 +104,32 @@
               body: JSON.stringify(coords)
             })
             .then(response => response.text())
-            .then(text => {
-                if (text.trim() === "true") {
-                    logToDiv("✅ ACK: Coordinates received successfully", 'lightgreen');
-                } else {
-                    logToDiv("❌ ACK: ESP responded with error", 'red');
-                }
+            .then(data => {
+                // if (data === "true") {
+                //     const ackDiv = document.createElement("div");
+                //     ackDiv.textContent = "ACK: Coordinates received successfully";
+                //     document.getElementById("coordinate-list").appendChild(ackDiv);
+                // } else {
+                //     const ackDiv = document.createElement("div");
+                //     ackDiv.textContent = "ACK: Error receiving coordinates";
+                //     document.getElementById("coordinate-list").appendChild(ackDiv);
+                // }
+                const ackDiv = document.createElement("div");
 
-                isWaitingForAck = false;
-                processNextCoordinate();
+            if (data === "true") {
+                ackDiv.textContent = "ACK: Coordinates received successfully";
+            } else {
+                ackDiv.textContent = "ACK: Error receiving coordinates";
+            }
+
+            coordinateList.appendChild(ackDiv);
+
+            // Ready for next set
+            isWaitingForAck = false;
+            processNextCoordinate(); // Continue the queue
             })
             .catch(error => {
-                logToDiv("❌ Error sending to ESP: " + error.message, 'red');
-
-                isWaitingForAck = false;
-                processNextCoordinate();
+              console.error('Error sending coordinates:', error);
             });
         }
 

@@ -2,11 +2,10 @@
 #include "cJSON.h"
 #include "esp_http_server.h"
 // #include <inttypes.h>
-extern void handle_raw_coordinates(const char *json_str);
 
 static const char *TAG = "websocket_server";
 
-static comms_val_t comms_val = { .x_coord = 0, .y_coord = 0, .z_coord = 0, .val_changed = false };
+static comms_val_t comms_val = { .x_coord = 0, .y_coord = 0, .z_coord = 0, .val_changed = false, .esp_ack = false  };
 
 static QueueHandle_t client_queue;
 const static int client_queue_size = 10;
@@ -29,6 +28,37 @@ static void initialise_mdns(void)
 
 void websocket_callback(uint8_t num, WEBSOCKET_TYPE_t type, char *msg, uint64_t len)
 {
+    // if (type == WEBSOCKET_TEXT && len > 0)
+    // {
+    //     char *msg_copy = malloc(len + 1);
+    //     if (!msg_copy) {
+    //         ESP_LOGE(TAG, "Memory allocation failed");
+    //         return;
+    //     }
+
+    //     memcpy(msg_copy, msg, len);
+    //     msg_copy[len] = '\0'; // ensure null-terminated
+
+    //     ESP_LOGI(TAG, "Raw coordinate data received via WebSocket: %s", msg_copy);
+
+    //     cJSON *json = cJSON_Parse(msg_copy);
+    //     free(msg_copy); // free after parsing
+    //     if (json == NULL) {
+    //         ESP_LOGE(TAG, "Failed to parse JSON");
+    //         return;
+    //     }
+
+    //     cJSON *x_val = cJSON_GetObjectItem(json, "x");
+    //     cJSON *y_val = cJSON_GetObjectItem(json, "y");
+
+    //     if (cJSON_IsNumber(x_val)) comms_val.x_coord = x_val->valueint;
+    //     if (cJSON_IsNumber(y_val)) comms_val.y_coord = y_val->valueint;
+
+    //     comms_val.val_changed = true;
+
+    //     cJSON_Delete(json);
+    // }
+
     if (type == WEBSOCKET_TEXT && len > 0)
     {
         char *msg_copy = malloc(len + 1);
@@ -38,12 +68,12 @@ void websocket_callback(uint8_t num, WEBSOCKET_TYPE_t type, char *msg, uint64_t 
         }
 
         memcpy(msg_copy, msg, len);
-        msg_copy[len] = '\0'; // ensure null-terminated
+        msg_copy[len] = '\0'; // Ensure null-terminated
 
         ESP_LOGI(TAG, "Raw coordinate data received via WebSocket: %s", msg_copy);
 
         cJSON *json = cJSON_Parse(msg_copy);
-        free(msg_copy); // free after parsing
+        free(msg_copy); // Free after parsing
         if (json == NULL) {
             ESP_LOGE(TAG, "Failed to parse JSON");
             return;
@@ -52,12 +82,37 @@ void websocket_callback(uint8_t num, WEBSOCKET_TYPE_t type, char *msg, uint64_t 
         cJSON *x_val = cJSON_GetObjectItem(json, "x");
         cJSON *y_val = cJSON_GetObjectItem(json, "y");
 
-        if (cJSON_IsNumber(x_val)) comms_val.x_coord = x_val->valueint;
-        if (cJSON_IsNumber(y_val)) comms_val.y_coord = y_val->valueint;
+        // if (cJSON_IsNumber(x_val)) comms_val.x_coord = x_val->valueint;
+        // if (cJSON_IsNumber(y_val)) comms_val.y_coord = y_val->valueint;
 
-        comms_val.val_changed = true;
+        if (cJSON_IsNumber(x_val) && cJSON_IsNumber(y_val)) {
+            comms_val.x_coord = x_val->valueint;
+            comms_val.y_coord = y_val->valueint;
+            comms_val.val_changed = true;
+            comms_val.esp_ack = true; // Set acknowledgment to true
+            ESP_LOGI(TAG, "Coordinates received: X = %d, Y = %d", comms_val.x_coord, comms_val.y_coord);
+            ESP_LOGI(TAG, "Sending acknowledgment: %s", comms_val.esp_ack ? "true" : "false");
+        } else {
+            comms_val.esp_ack = false; // Set acknowledgment to false if invalid
+            ESP_LOGI(TAG, "Coordinates not received.");
+        }
+
+        // Optional: Call your own handler if needed
+        // handle_raw_coordinates(msg_copy); // if needed
 
         cJSON_Delete(json);
+
+        while(!comms_val.esp_ack)
+        {
+            vTaskDelay(pdMS_TO_TICKS(100));
+        }
+        // Send acknowledgment back to the sender via WebSocket
+
+        const char *ack_msg = comms_val.esp_ack ? "true" : "false";
+        ws_server_send_text_all((char *)ack_msg, strlen(ack_msg));
+        // const bool *ack = comms_val.esp_ack;
+        // ws_server_send_text_all(ack, strlen(ack)); // send to all clients
+        // ws_server_send_text(num, ack, strlen(ack)); // send only to specific client
     }
 }
 

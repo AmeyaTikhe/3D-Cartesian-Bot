@@ -35,11 +35,11 @@ typedef struct comms_val
     int y_coord;
     int z_coord;
     bool val_changed;
+    bool esp_ack;
 } comms_val_t;
 
 comms_val_t read_comms();
 void reset_val_changed_coms();
-void start_http_server();
-extern cJSON *handle_raw_coordinates();
+void start_websocket_server();
 
 #endif
