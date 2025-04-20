@@ -67,6 +67,5 @@ Kindly refer to the [CMakeLists.txt](main/CMakeLists.txt) file to understand whi
 
 ### Prerequisites
 
-- ESP32 development board
-- ESP-IDF development environment set up on your system
-- Python 3.x installed for running the frontend and tests
+- ESP32 development board.
+- ESP-IDF development environment set up on your system.
