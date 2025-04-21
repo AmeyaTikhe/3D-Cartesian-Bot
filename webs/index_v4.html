@@ -46,11 +46,11 @@
     </div>
     
     <script>
-        let ESPsocket, OCVsocket;
+        let socket;
         const coordinateList = document.getElementById("coordinate-list");
-        let receivedCoordinates = []; // 2D array to store received coordinates
-        let sendTimer;  
 
+        let coordQueue = [];
+        let isWaitingForAck = false;
 
         function logToDiv(message, color = 'greenyellow') {
             const logDiv = document.createElement("div");
@@ -61,78 +61,78 @@
         }
         
         function connectOpenCVWebSocket() {
-            OCVsocket = new WebSocket("ws://localhost:9000");
+            socket = new WebSocket("ws://localhost:9000");
             const coordinateList = document.getElementById("coordinate-list");
-            const receivedCoordinates = []; // 2D array to store received coordinates
         
-            OCVsocket.onmessage = function(event) {
+            socket.onmessage = function(event) {
                 try {
                 const data = JSON.parse(event.data);
                 logToDiv(`Received: DOT X=${data.x}, Y=${data.y}`, 'cyan');
 
-                // Store coordinates in 2D array
-                receivedCoordinates.push([data.x, data.y]);
-
-                // Reset the batch send timer
-                clearTimeout(sendTimer);
-                sendTimer = setTimeout(sendAllCoordinates, 2000); // Send after 2s of no new data
+                // send coordinates to ESP via HTTP
+                coordQueue.push({ x: data.x, y: data.y });
+                logToDiv(`Queued DOT at X=${data.x}, Y=${data.y}`, 'orange');
+                processNextCoordinate();  // Try to process if nothing is in progress  
                 }
                 catch (err) {
                     logToDiv(`Error parsing message: ${event.data}`, 'red');
                 }  
             };
         
-            OCVsocket.onopen = function() {
+            socket.onopen = function() {
                 logToDiv("Connected to WebSocket server", 'lime');
             };
         
-            OCVsocket.onclose = function() {
+            socket.onclose = function() {
                 logToDiv(" WebSocket closed. Reconnecting in 2 seconds...", 'gray');
                 setTimeout(connectOpenCVWebSocket, 2000); // Retry connection
             };
         
-            OCVsocket.onerror = function(error) {
+            socket.onerror = function(error) {
                 logToDiv(" WebSocket Error: " + error.message, 'red');
                 socket.close(); // Close the socket and retry
             };
         }
 
-        function sendCoordinatesToESP(coords) {
+        function processNextCoordinate() {
+            if (isWaitingForAck || coordQueue.length === 0) return;
+    
+            const coords = coordQueue.shift(); // Get the next one
+            isWaitingForAck = true;
+
+            logToDiv(`DOT: X=${coords.x}, Y=${coords.y}`, 'white');
+
             logToDiv(`Sending to ESP: X=${coords.x}, Y=${coords.y}`, 'yellow');
-            
-            const message = "C" + coords.x + "," + coords.y;
-
-            logToDiv(`Trying to send: ${message}`, 'orange');
-
-            ESPsocket.onopen = function() {
-                logToDiv("WebSocket connection opened.", 'lime');
-                if (onopen) onopen();
-            };
-        
-            ESPsocket.onerror = function(error) {
-                logToDiv("WebSocket error: " + error.message, 'red');
-                if (onerror) onerror(error);
-            };
-        
-            ESPsocket.onclose = function() {
-                logToDiv("WebSocket closed.", 'gray');
-                if (onclose) onclose();
-            };
-            
-            if (ESPsocket && ESPsocket.readyState === WebSocket.OPEN) {
-                ESPsocket.send(message);
-                logToDiv(`Sent to ESP: ${message}`, 'yellow');
-            } else {
-                logToDiv(`❌ Socket not open. State = ${ESPsocket?.readyState}`, 'red');
-            }
+            sendCoordinatesToESP(coords);
         }
+              
+        function sendCoordinatesToESP(coords) {
+            //fetch('/update_coords', {
+            //const ESP_IP = "192.168.183.123";
 
-        function sendAllCoordinates() {
-            //ESPsocket = new WebSocket("ws://localhost:9001");
-            ESPsocket = new WebSocket("ws://esp32-webserver.local/ws");
-            logToDiv("Sending all received coordinates to ESP...", 'aqua');
-            receivedCoordinates.forEach(([x, y]) => {
-                sendCoordinatesToESP({ x, y });
+            fetch("http://192.168.183.123/update_coords", {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(coords)
+            })
+            .then(response => response.text())
+            .then(text => {
+                if (text.trim() === "true") {
+                    logToDiv("✅ ACK: Coordinates received successfully", 'lightgreen');
+                } else {
+                    logToDiv("❌ ACK: ESP responded with error", 'red');
+                }
+
+                isWaitingForAck = false;
+                processNextCoordinate();
+            })
+            .catch(error => {
+                logToDiv("❌ Error sending to ESP: " + error.message, 'red');
+
+                isWaitingForAck = false;
+                processNextCoordinate();
             });
         }
 

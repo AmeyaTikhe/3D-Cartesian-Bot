@@ -3,6 +3,14 @@
 #include "esp_http_server.h"
 // #include <inttypes.h>
 
+// #define MIN(a,b) (((a)<(b))?(a):(b))
+// #define MAX(a,b) (((a)>(b))?(a):(b))
+
+#define MAX_COORDINATES 100  // Maximum number of coordinates to store
+static int coordinates[MAX_COORDINATES][2];  // 2D array to store coordinates (x, y)
+static int coord_index = 0;  // Index to keep track of the current position in the array
+
+
 static const char *TAG = "websocket_server";
 
 static comms_val_t comms_val = { .x_coord = 0, .y_coord = 0, .z_coord = 0, .val_changed = false, .esp_ack = false  };
@@ -28,93 +36,86 @@ static void initialise_mdns(void)
 
 void websocket_callback(uint8_t num, WEBSOCKET_TYPE_t type, char *msg, uint64_t len)
 {
-    // if (type == WEBSOCKET_TEXT && len > 0)
-    // {
-    //     char *msg_copy = malloc(len + 1);
-    //     if (!msg_copy) {
-    //         ESP_LOGE(TAG, "Memory allocation failed");
-    //         return;
-    //     }
-
-    //     memcpy(msg_copy, msg, len);
-    //     msg_copy[len] = '\0'; // ensure null-terminated
-
-    //     ESP_LOGI(TAG, "Raw coordinate data received via WebSocket: %s", msg_copy);
-
-    //     cJSON *json = cJSON_Parse(msg_copy);
-    //     free(msg_copy); // free after parsing
-    //     if (json == NULL) {
-    //         ESP_LOGE(TAG, "Failed to parse JSON");
-    //         return;
-    //     }
-
-    //     cJSON *x_val = cJSON_GetObjectItem(json, "x");
-    //     cJSON *y_val = cJSON_GetObjectItem(json, "y");
-
-    //     if (cJSON_IsNumber(x_val)) comms_val.x_coord = x_val->valueint;
-    //     if (cJSON_IsNumber(y_val)) comms_val.y_coord = y_val->valueint;
-
-    //     comms_val.val_changed = true;
-
-    //     cJSON_Delete(json);
-    // }
-
-    if (type == WEBSOCKET_TEXT && len > 0)
+    switch (type)
     {
-        char *msg_copy = malloc(len + 1);
-        if (!msg_copy) {
-            ESP_LOGE(TAG, "Memory allocation failed");
-            return;
+    case WEBSOCKET_CONNECT:
+        ESP_LOGI(TAG, "client %i connected!", num);
+        break;
+    case WEBSOCKET_DISCONNECT_EXTERNAL:
+        ESP_LOGI(TAG, "client %i sent a disconnect message", num);
+        break;
+    case WEBSOCKET_DISCONNECT_INTERNAL:
+        ESP_LOGI(TAG, "client %i was disconnected", num);
+        break;
+    case WEBSOCKET_DISCONNECT_ERROR:
+        ESP_LOGI(TAG, "client %i was disconnected due to an error", num);
+        break;
+    case WEBSOCKET_TEXT:
+        if (len)
+        { 
+            // Print received message for debugging
+            ESP_LOGI(TAG, "Received message: %.*s", (int)len, msg);
+            
+            // Parse coordinates format from index.html: "Cx,y"
+            if (msg[0] == 'C' && len > 1)
+            {
+                // Find the comma that separates x and y values
+                char *comma = strchr(&msg[1], ',');
+                if (comma != NULL)
+                {
+                    // Extract x coordinate
+                    *comma = '\0'; // Temporarily replace comma with null terminator
+                    int x = atoi(&msg[1]);
+                    
+                    // Extract y coordinate
+                    int y = atoi(comma + 1);
+                    
+                    // Restore comma
+                    *comma = ',';
+                    
+                    // Save to comms_val
+                    comms_val.x_coord = x;
+                    comms_val.y_coord = y;
+                    comms_val.val_changed = true;
+                    
+                    // Add to coordinates array
+                    if (coord_index < MAX_COORDINATES)
+                    {
+                        coordinates[coord_index][0] = x;
+                        coordinates[coord_index][1] = y;
+                        coord_index++;
+                    }
+                    
+                    ESP_LOGI(TAG, "Saved coordinates: x=%d, y=%d", x, y);
+                    
+                    // Send acknowledgment back if needed
+                    const char *ack_msg = "{\"status\":\"received\"}";
+                    ws_server_send_text_all((char *)ack_msg, strlen(ack_msg));
+                }
+                else
+                {
+                    ESP_LOGE(TAG, "Invalid coordinate format: %s", msg);
+                }
+            }
+            // Handle other message types if needed
+            else
+            {
+                ESP_LOGI(TAG, "Unhandled message: %.*s", (int)len, msg);
+            }    
         }
-
-        memcpy(msg_copy, msg, len);
-        msg_copy[len] = '\0'; // Ensure null-terminated
-
-        ESP_LOGI(TAG, "Raw coordinate data received via WebSocket: %s", msg_copy);
-
-        cJSON *json = cJSON_Parse(msg_copy);
-        free(msg_copy); // Free after parsing
-        if (json == NULL) {
-            ESP_LOGE(TAG, "Failed to parse JSON");
-            return;
-        }
-
-        cJSON *x_val = cJSON_GetObjectItem(json, "x");
-        cJSON *y_val = cJSON_GetObjectItem(json, "y");
-
-        // if (cJSON_IsNumber(x_val)) comms_val.x_coord = x_val->valueint;
-        // if (cJSON_IsNumber(y_val)) comms_val.y_coord = y_val->valueint;
-
-        if (cJSON_IsNumber(x_val) && cJSON_IsNumber(y_val)) {
-            comms_val.x_coord = x_val->valueint;
-            comms_val.y_coord = y_val->valueint;
-            comms_val.val_changed = true;
-            comms_val.esp_ack = true; // Set acknowledgment to true
-            ESP_LOGI(TAG, "Coordinates received: X = %d, Y = %d", comms_val.x_coord, comms_val.y_coord);
-            ESP_LOGI(TAG, "Sending acknowledgment: %s", comms_val.esp_ack ? "true" : "false");
-        } else {
-            comms_val.esp_ack = false; // Set acknowledgment to false if invalid
-            ESP_LOGI(TAG, "Coordinates not received.");
-        }
-
-        // Optional: Call your own handler if needed
-        // handle_raw_coordinates(msg_copy); // if needed
-
-        cJSON_Delete(json);
-
-        while(!comms_val.esp_ack)
-        {
-            vTaskDelay(pdMS_TO_TICKS(100));
-        }
-        // Send acknowledgment back to the sender via WebSocket
-
-        const char *ack_msg = comms_val.esp_ack ? "true" : "false";
-        ws_server_send_text_all((char *)ack_msg, strlen(ack_msg));
-        // const bool *ack = comms_val.esp_ack;
-        // ws_server_send_text_all(ack, strlen(ack)); // send to all clients
-        // ws_server_send_text(num, ack, strlen(ack)); // send only to specific client
+        break;
+    case WEBSOCKET_BIN:
+        ESP_LOGI(TAG, "client %i sent binary message of size %llu:\n%s", num, (unsigned long long)len, msg);
+        break;
+    case WEBSOCKET_PING:
+        ESP_LOGI(TAG, "client %i pinged us with message of size %llu:\n%s", num, (unsigned long long)len, msg);
+        break;
+    case WEBSOCKET_PONG:
+        ESP_LOGI(TAG, "client %i responded to the ping", num);
+        break;
     }
 }
+
 
 static void http_server(struct netconn *conn)
 {

@@ -1,7 +1,7 @@
 {
     "version":            "1.1",
     "project_name":       "StepperMotor",
-    "project_version":    "2eb4c6c-dirty",
+    "project_version":    "a6ca9f7-dirty",
     "project_path":       "C:/Users/ameya/Desktop/StepperMotor",
     "idf_path":           "C:/Espressif/frameworks/esp-idf-v5.4",
     "build_dir":          "C:/Users/ameya/Desktop/StepperMotor/build",
