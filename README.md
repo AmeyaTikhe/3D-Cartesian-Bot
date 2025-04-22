@@ -28,7 +28,7 @@ In the current logic, the OpenCV Python script captures frames from a webcam and
 ## Features
 
 - **Smooth Stepper Motor Control**: Generates stepper motor signals with acceleration and deceleration phases using the ESP32's RMT peripheral.
-- **OpenCV Integration**: Utilizes OpenCV for computer vision tasks, potentially enabling features like object detection or path planning.
+- **OpenCV Integration**: Utilizes OpenCV for computer vision tasks, potentially enabling features like dot detection or path planning.
 - **WebSocket Frontend**: Provides a mock terminal frontend for data tranfer information.
 
 ---
