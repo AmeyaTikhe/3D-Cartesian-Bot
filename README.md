@@ -20,7 +20,7 @@ In the current logic, the OpenCV Python script captures frames from a webcam and
     - [Run the OpenCV Detection](#run-the-opencv-detection)
     - [Capture Coordinates](#capture-coordinates)
     - [Exit the Program](#exit-the-program)
-4. [Future Work](#future-work)
+4. [Project Workflow](#project-workflow)
 5. [Prerequisites](#prerequisites)
 
 ---
@@ -94,12 +94,14 @@ In the current logic, the OpenCV Python script captures frames from a webcam and
 
 ---
 
-## Future Work
+## Project Workflow
 
-- Design a custom PCB to connect three NEMA17 stepper motors, compatible with a customized Creality Ender 3 V2 3D printer assembly.
-- Implement machine learning to recognize dot patterns and categorize them into different types of surgical incisions, allowing for path planning based on incision type.
-- Simulate the process by actuating a pen to connect dots drawn on a reusable sheet.
-- Incorporate the ability to write at an angle, replicating the angled characteristic of a surgical incision.
+- Learnt OpenCV functions and image processing techniques and implemented blob detection to detect the dots on a snapshot of the camera feed.
+- Created a mock terminal on the web server using HTML, CSS, and JavaScript and connected it to OpenCV using WebSocket to transmit the coordinate data.
+- Adapted RMT code from the ESP-IDF RMT GitHub repository for controlling 3 motors.
+- Linked the ESP32 code with the web server through WebSocket to receive coordinates and control the robot's movement and built a coordinate set transfer logic for the same.
+- Currently woking on the design of a custom PCB to run three NEMA17 stepper motors using an ESP32 microcontroller, that is also compatible with a customized Creality Ender 3 V2 3D printer assembly.
+- Also exploring the implementation of machine learning to recognize dot patterns and categorize them into different types of surgical incisions, allowing for path planning based on incision type and simulating the process by actuating a pen to connect dots drawn on a reusable sheet.
 
 ---
 
