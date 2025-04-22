@@ -1,0 +1,249 @@
+ets Jul 29 2019 12:21:46
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:6276
+load:0x40078000,len:15716
+load:0x40080400,len:4
+ho 8 tail 4 room 4
+load:0x40080404,len:3860
+entry 0x4008063c
+[0;32mI (31) boot: ESP-IDF v5.4-dirty 2nd stage bootloader[0m
+[0;32mI (31) boot: compile time Apr 22 2025 14:00:43[0m
+[0;32mI (31) boot: Multicore bootloader[0m
+[0;32mI (33) boot: chip revision: v3.1[0m
+[0;32mI (36) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (39) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (43) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (47) boot: Enabling RNG early entropy source...[0m
+[0;32mI (51) boot: Partition Table:[0m
+[0;32mI (54) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (60) boot:  0 nvs              WiFi data        01 02 00009000 00006000[0m
+[0;32mI (66) boot:  1 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (73) boot:  2 factory          factory app      00 00 00010000 00100000[0m
+[0;32mI (80) boot: End of partition table[0m
+[0;32mI (83) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=1ca30h (117296) map[0m
+[0;32mI (130) esp_image: segment 1: paddr=0002ca58 vaddr=3ff80000 size=0001ch (    28) load[0m
+[0;32mI (131) esp_image: segment 2: paddr=0002ca7c vaddr=3ffb0000 size=0359ch ( 13724) load[0m
+[0;32mI (139) esp_image: segment 3: paddr=00030020 vaddr=400d0020 size=8f588h (587144) map[0m
+[0;32mI (342) esp_image: segment 4: paddr=000bf5b0 vaddr=3ffb359c size=00c68h (  3176) load[0m
+[0;32mI (344) esp_image: segment 5: paddr=000c0220 vaddr=40080000 size=18054h ( 98388) load[0m
+[0;32mI (396) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (396) boot: Disabling RNG early entropy source...[0m
+[0;32mI (406) cpu_start: Multicore app[0m
+[0;32mI (415) cpu_start: Pro cpu start user code[0m
+[0;32mI (415) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (415) app_init: Application information:[0m
+[0;32mI (415) app_init: Project name:     StepperMotor[0m
+[0;32mI (419) app_init: App version:      be9365d-dirty[0m
+[0;32mI (424) app_init: Compile time:     Apr 22 2025 14:00:23[0m
+[0;32mI (429) app_init: ELF file SHA256:  9d8f7810c...[0m
+[0;32mI (433) app_init: ESP-IDF:          v5.4-dirty[0m
+[0;32mI (437) efuse_init: Min chip rev:     v0.0[0m
+[0;32mI (441) efuse_init: Max chip rev:     v3.99 [0m
+[0;32mI (445) efuse_init: Chip rev:         v3.1[0m
+[0;32mI (449) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (455) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (460) heap_init: At 3FFB9560 len 00026AA0 (154 KiB): DRAM[0m
+[0;32mI (466) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (471) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (476) heap_init: At 40098054 len 00007FAC (31 KiB): IRAM[0m
+[0;32mI (483) spi_flash: detected chip: generic[0m
+[0;32mI (485) spi_flash: flash io: dio[0m
+[0;32mI (489) main_task: Started on CPU0[0m
+[0;32mI (499) main_task: Calling app_main()[0m
+[0;32mI (499) Stepper Motor: Initialize EN + DIR GPIO[0m
+[0;32mI (499) gpio: GPIO[0]| InputEn: 0| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+[0;32mI (499) gpio: GPIO[2]| InputEn: 0| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+[0;32mI (509) Stepper Motor: Creating RMT TX channels[0m
+[0;33mW (519) rmt: GPIO 4 is not usable, maybe conflict with others[0m
+[0;33mW (519) rmt: GPIO 4 is not usable, maybe conflict with others[0m
+[0;32mI (529) Stepper Motor: Create motor encoders[0m
+[0;32mI (529) Stepper Motor: Enable RMT channel[0m
+[0;32mI (539) Stepper Motor: Setup complete.[0m
+[0;32mI (569) mdns_mem: mDNS task will be created from internal RAM[0m
+[0;32mI (569) wifi station: ESP_WIFI_MODE_STA[0m
+[0;32mI (579) wifi:wifi driver task: 3ffc6560, prio:23, stack:6656, core=0[0m
+[0;32mI (589) wifi:wifi firmware version: 48ea317a7[0m
+[0;32mI (589) wifi:wifi certification version: v7.0[0m
+[0;32mI (589) wifi:config NVS flash: enabled[0m
+[0;32mI (589) wifi:config nano formatting: disabled[0m
+[0;32mI (599) wifi:Init data frame dynamic rx buffer num: 32[0m
+[0;32mI (599) wifi:Init static rx mgmt buffer num: 5[0m
+[0;32mI (609) wifi:Init management short buffer num: 32[0m
+[0;32mI (609) wifi:Init dynamic tx buffer num: 32[0m
+[0;32mI (619) wifi:Init static rx buffer size: 1600[0m
+[0;32mI (619) wifi:Init static rx buffer num: 10[0m
+[0;32mI (619) wifi:Init dynamic rx buffer num: 32[0m
+[0;32mI (629) wifi_init: rx ba win: 6[0m
+[0;32mI (629) wifi_init: accept mbox: 6[0m
+[0;32mI (629) wifi_init: tcpip mbox: 32[0m
+[0;32mI (639) wifi_init: udp mbox: 6[0m
+[0;32mI (639) wifi_init: tcp mbox: 6[0m
+[0;32mI (639) wifi_init: tcp tx win: 5760[0m
+[0;32mI (649) wifi_init: tcp rx win: 5760[0m
+[0;32mI (649) wifi_init: tcp mss: 1440[0m
+[0;32mI (649) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (659) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (659) phy_init: phy_version 4840,02e0d70,Sep  2 2024,19:39:07[0m
+[0;32mI (739) wifi:mode : sta (a0:a3:b3:90:7d:78)[0m
+[0;32mI (739) wifi:enable tsf[0m
+[0;32mI (739) wifi station: wifi_init_sta finished.[0m
+[0;32mI (759) wifi:new:<10,0>, old:<1,0>, ap:<255,255>, sta:<10,0>, prof:1, snd_ch_cfg:0x0[0m
+[0;32mI (759) wifi:state: init -> auth (0xb0)[0m
+[0;32mI (789) wifi:state: auth -> assoc (0x0)[0m
+[0;32mI (859) wifi:state: assoc -> run (0x10)[0m
+[0;32mI (909) wifi:connected with S21.FE, aid = 2, channel 10, BW20, bssid = aa:12:7a:04:27:56[0m
+[0;32mI (909) wifi:security: WPA2-PSK, phy: bgn, rssi: -24[0m
+[0;32mI (909) wifi:pm start, type: 1[0m
+
+[0;32mI (909) wifi:dp: 1, bi: 102400, li: 3, scale listen interval from 307200 us to 307200 us[0m
+[0;32mI (979) wifi:<ba-add>idx:0 (ifx:0, aa:12:7a:04:27:56), tid:0, ssn:0, winSize:64[0m
+[0;32mI (1029) wifi:dp: 2, bi: 102400, li: 4, scale listen interval from 307200 us to 409600 us[0m
+[0;32mI (1029) wifi:AP's beacon interval = 102400 us, DTIM period = 2[0m
+[0;32mI (2059) esp_netif_handlers: sta ip: 192.168.247.123, mask: 255.255.255.0, gw: 192.168.247.215[0m
+[0;32mI (2059) wifi station: got ip:192.168.247.123[0m
+[0;32mI (2059) wifi station: connected to ap SSID: S21.FE[0m
+[0;32mI (2069) websocket_server: server listening[0m
+[0;32mI (2069) websocket_server: task starting[0m
+[0;32mI (2069) Stepper Motor: Set spin direction[0m
+[0;32mI (2069) Stepper Motor: Enable step motor[0m
+[0;32mI (2079) main_task: Returned from app_main()[0m
+[0;32mI (16969) websocket_server: new client[0m
+[0;32mI (16969) websocket_server: reading from client...[0m
+[0;32mI (17069) websocket_server: new client[0m
+[0;32mI (17169) websocket_server: new client[0m
+[0;32mI (26969) websocket_server: read from client[0m
+[0;32mI (26969) websocket_server: error on read, closing connection[0m
+[0;32mI (27069) websocket_server: reading from client...[0m
+[0;32mI (27069) websocket_server: read from client[0m
+[0;32mI (27069) websocket_server: Incoming request:[0m
+GET / HTTP/1.1
+Host: 192.168.247.123
+Connection: keep-alive
+Cache-Control: max-age=0
+DNT: 1
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Accept-Encoding: gzip, deflate
+Accept-Language: en-IN,en-GB;q=0.9,en;q=0.8,mr-IN;q=0.7,mr;q=0.6,en-US;q=0.5
+
+
+[0;32mI (27109) websocket_server: Serving root HTML page.[0m
+[0;32mI (27219) websocket_server: reading from client...[0m
+[0;32mI (27559) websocket_server: new client[0m
+[0;32mI (27679) websocket_server: read from client[0m
+[0;32mI (27679) websocket_server: Incoming request:[0m
+GET /favicon.ico HTTP/1.1
+Host: 192.168.247.123
+Connection: keep-alive
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36
+DNT: 1
+Accept: image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8
+Referer: http://192.168.247.123/
+Accept-Encoding: gzip, deflate
+Accept-Language: en-IN,en-GB;q=0.9,en;q=0.8,mr-IN;q=0.7,mr;q=0.6,en-US;q=0.5
+
+
+[0;32mI (27719) websocket_server: Serving root HTML page.[0m
+[0;32mI (27829) websocket_server: reading from client...[0m
+[0;32mI (27829) websocket_server: read from client[0m
+[0;32mI (27829) websocket_server: Incoming request:[0m
+GET /ws HTTP/1.1
+Host: 192.168.247.123
+Connection: Upgrade
+Pragma: no-cache
+Cache-Control: no-cache
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36
+Upgrade: websocket
+Origin: http://192.168.247.123
+Sec-WebSocket-Version: 13
+Accept-Encoding: gzip, deflate
+Accept-Language: en-IN,en-GB;q=0.9,en;q=0.8,mr-IN;q=0.7,mr;q=0.6,en-US;q=0.5
+Sec-WebSocket-Key: VXAmCyzpO17YlxARygJwBQ==
+Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits
+
+
+[0;32mI (27869) websocket_server: WebSocket upgrade requested.[0m
+[0;32mI (27879) websocket_server: client 0 connected![0m
+[0;32mI (36399) websocket_server: new client[0m
+[0;32mI (36399) websocket_server: reading from client...[0m
+[0;32mI (36499) websocket_server: new client[0m
+[0;32mI (46399) websocket_server: read from client[0m
+[0;32mI (46399) websocket_server: error on read, closing connection[0m
+[0;32mI (46499) websocket_server: reading from client...[0m
+[0;32mI (46499) websocket_server: read from client[0m
+[0;32mI (46499) websocket_server: Incoming request:[0m
+GET / HTTP/1.1
+Host: 192.168.247.123
+Connection: keep-alive
+Cache-Control: max-age=0
+DNT: 1
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Accept-Encoding: gzip, deflate
+Accept-Language: en-IN,en-GB;q=0.9,en;q=0.8,mr-IN;q=0.7,mr;q=0.6,en-US;q=0.5
+
+
+[0;32mI (46539) websocket_server: Serving root HTML page.[0m
+[0;32mI (46579) websocket_server: client 0 sent a disconnect message[0m
+[0;32mI (46649) websocket_server: new client[0m
+[0;32mI (46649) websocket_server: reading from client...[0m
+[0;32mI (46649) websocket_server: read from client[0m
+[0;32mI (46649) websocket_server: Incoming request:[0m
+GET /ws HTTP/1.1
+Host: 192.168.247.123
+Connection: Upgrade
+Pragma: no-cache
+Cache-Control: no-cache
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36
+Upgrade: websocket
+Origin: http://192.168.247.123
+Sec-WebSocket-Version: 13
+Accept-Encoding: gzip, deflate
+Accept-Language: en-IN,en-GB;q=0.9,en;q=0.8,mr-IN;q=0.7,mr;q=0.6,en-US;q=0.5
+Sec-WebSocket-Key: lHhMwfxZ493KLNl+aV5A4Q==
+Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits
+
+
+[0;32mI (46699) websocket_server: WebSocket upgrade requested.[0m
+[0;32mI (46709) websocket_server: client 0 connected![0m
+[0;32mI (46769) websocket_server: new client[0m
+[0;32mI (46809) websocket_server: reading from client...[0m
+[0;32mI (46809) websocket_server: read from client[0m
+[0;32mI (46809) websocket_server: Incoming request:[0m
+GET /favicon.ico HTTP/1.1
+Host: 192.168.247.123
+Connection: keep-alive
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36
+DNT: 1
+Accept: image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8
+Referer: http://192.168.247.123/
+Accept-Encoding: gzip, deflate
+Accept-Language: en-IN,en-GB;q=0.9,en;q=0.8,mr-IN;q=0.7,mr;q=0.6,en-US;q=0.5
+
+
+[0;32mI (46849) websocket_server: Serving root HTML page.[0m
+[0;32mI (52969) websocket_server: Received message: 350,118;615,220;289,228;616,235;411,236;360,240;285,247;408,250;605,278;346,284;331,291;337,322;406,363;343,366;306,375;613,378;394,382;312,389[0m
+[0;32mI (52969) websocket_server: Parsed coordinate pair: x=350, y=118[0m
+[0;32mI (52979) websocket_server: Parsed coordinate pair: x=615, y=220[0m
+[0;32mI (52979) websocket_server: Parsed coordinate pair: x=289, y=228[0m
+[0;32mI (52989) websocket_server: Parsed coordinate pair: x=616, y=235[0m
+[0;32mI (52989) websocket_server: Parsed coordinate pair: x=411, y=236[0m
+[0;32mI (52999) websocket_server: Parsed coordinate pair: x=360, y=240[0m
+[0;32mI (53009) websocket_server: Parsed coordinate pair: x=285, y=247[0m
+[0;32mI (53009) websocket_server: Parsed coordinate pair: x=408, y=250[0m
+[0;32mI (53019) websocket_server: Parsed coordinate pair: x=605, y=278[0m
+[0;32mI (53019) websocket_server: Parsed coordinate pair: x=346, y=284[0m
+[0;32mI (53029) websocket_server: Parsed coordinate pair: x=331, y=291[0m
+[0;32mI (53029) websocket_server: Parsed coordinate pair: x=337, y=322[0m
+[0;32mI (53039) websocket_server: Parsed coordinate pair: x=406, y=363[0m
+[0;32mI (53049) websocket_server: Parsed coordinate pair: x=343, y=366[0m
+[0;32mI (53049) websocket_server: Parsed coordinate pair: x=306, y=375[0m
+[0;32mI (53059) websocket_server: Parsed coordinate pair: x=613, y=378[0m
+[0;32mI (53059) websocket_server: Parsed coordinate pair: x=394, y=382[0m
+[0;32mI (53069) websocket_server: Parsed coordinate pair: x=312, y=389[0m

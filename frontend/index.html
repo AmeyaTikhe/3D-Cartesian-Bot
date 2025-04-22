@@ -46,7 +46,7 @@
     </div>
     
     <script>
-        let ESPsocket, OCVsocket;
+        let ESPsocket = new WebSocket("ws://192.168.247.123/ws");
         const coordinateList = document.getElementById("coordinate-list");
         let receivedCoordinates = []; // 2D array to store received coordinates
         let sendTimer;  
@@ -59,11 +59,26 @@
             coordinateList.appendChild(logDiv);
             coordinateList.scrollTop = coordinateList.scrollHeight;
         }
+
+        ESPsocket.onopen = function() {
+            logToDiv("WebSocket connection opened.", 'lime');
+            //if (onopen) onopen();
+        };
+    
+        ESPsocket.onerror = function(error) {
+            logToDiv("WebSocket error: " + error.message, 'red');
+            //if (onerror) onerror(error);
+        };
+    
+        ESPsocket.onclose = function() {
+            logToDiv("WebSocket closed.", 'gray');
+            //if (onclose) onclose();
+        };
         
         function connectOpenCVWebSocket() {
-            OCVsocket = new WebSocket("ws://localhost:9000");
-            const coordinateList = document.getElementById("coordinate-list");
-            const receivedCoordinates = []; // 2D array to store received coordinates
+            let OCVsocket = new WebSocket("ws://localhost:9000");
+            //const coordinateList = document.getElementById("coordinate-list");
+            //const receivedCoordinates = []; // 2D array to store received coordinates
         
             OCVsocket.onmessage = function(event) {
                 try {
@@ -93,47 +108,45 @@
         
             OCVsocket.onerror = function(error) {
                 logToDiv(" WebSocket Error: " + error.message, 'red');
-                socket.close(); // Close the socket and retry
+                OCVsocket.close(); // Close the socket and retry
             };
         }
 
-        function sendCoordinatesToESP(coords) {
-            logToDiv(`Sending to ESP: X=${coords.x}, Y=${coords.y}`, 'yellow');
+        function sendCoordinatesToESP(message) {
+            //logToDiv(`Sending to ESP: X=${coords.x}, Y=${coords.y}`, 'yellow');
             
-            const message = "C" + coords.x + "," + coords.y;
+            //const message = "C" + coords.x + "," + coords.y;
 
             logToDiv(`Trying to send: ${message}`, 'orange');
 
-            ESPsocket.onopen = function() {
-                logToDiv("WebSocket connection opened.", 'lime');
-                if (onopen) onopen();
-            };
-        
-            ESPsocket.onerror = function(error) {
-                logToDiv("WebSocket error: " + error.message, 'red');
-                if (onerror) onerror(error);
-            };
-        
-            ESPsocket.onclose = function() {
-                logToDiv("WebSocket closed.", 'gray');
-                if (onclose) onclose();
-            };
-            
             if (ESPsocket && ESPsocket.readyState === WebSocket.OPEN) {
                 ESPsocket.send(message);
                 logToDiv(`Sent to ESP: ${message}`, 'yellow');
-            } else {
+            } 
+            else if (ESPsocket.readyState === WebSocket.CONNECTING) {
+                logToDiv("⚠️ WebSocket is still connecting. Retrying in 100ms...", 'orange');
+                setTimeout(() => sendCoordinatesToESP(message), 100); // retry later
+            } 
+            else {
                 logToDiv(`❌ Socket not open. State = ${ESPsocket?.readyState}`, 'red');
             }
         }
 
         function sendAllCoordinates() {
             //ESPsocket = new WebSocket("ws://localhost:9001");
-            ESPsocket = new WebSocket("ws://esp32-webserver.local/ws");
-            logToDiv("Sending all received coordinates to ESP...", 'aqua');
-            receivedCoordinates.forEach(([x, y]) => {
-                sendCoordinatesToESP({ x, y });
+            //ESPsocket = new WebSocket("ws://esp32-webserver.local/ws");
+            let fullmessage = "";
+            logToDiv("Generating final message...", 'aqua');
+            receivedCoordinates.forEach(([x, y], index) => {
+                fullmessage += `${x},${y}`;
+                if (index !== receivedCoordinates.length - 1) {
+                fullmessage += ";"; // Use semicolon to separate coordinate pairs
+                }
             });
+            
+            logToDiv("Sending final message to ESP...", 'aqua');
+            sendCoordinatesToESP(fullmessage);
+            receivedCoordinates = []; // clear after sending
         }
 
         connectOpenCVWebSocket(); // Start WebSocket connection        

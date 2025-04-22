@@ -1,9 +1,15 @@
 #include "tuning_http_server.h"
-// #include <inttypes.h>
+#include "cJSON.h"
+#include "esp_http_server.h"
+
+#define MAX_COORDINATES 100  // Maximum number of coordinates to store
+static int coordinates[MAX_COORDINATES][2];  // 2D array to store coordinates (x, y)
+static int coord_index = 0;  // Index to keep track of the current position in the array
+
 
 static const char *TAG = "websocket_server";
 
-static comms_val_t comms_val = { .forward = false, .backward = false, .front_right = false, .front_left = false, .back_right = false, .back_left = false, .clockwise = false, .anticlockwise = false, .val_changed = false };
+static comms_val_t comms_val = { .x_coord = 0, .y_coord = 0, .z_coord = 0, .val_changed = false, .esp_ack = false  };
 
 static QueueHandle_t client_queue;
 const static int client_queue_size = 10;
@@ -21,6 +27,8 @@ static void initialise_mdns(void)
     ESP_ERROR_CHECK(mdns_service_add("ESP32-WebServer", "_http", "_tcp", 80, serviceTxtData,
                                      sizeof(serviceTxtData) / sizeof(serviceTxtData[0])));
 }
+
+//websocket callback function
 
 void websocket_callback(uint8_t num, WEBSOCKET_TYPE_t type, char *msg, uint64_t len)
 {
@@ -40,71 +48,64 @@ void websocket_callback(uint8_t num, WEBSOCKET_TYPE_t type, char *msg, uint64_t 
         break;
     case WEBSOCKET_TEXT:
         if (len)
-        { // if the message length was greater than zero
-            comms_val.val_changed = true;
+        { 
+            // Print received message for debugging
+            ESP_LOGI(TAG, "Received message: %.*s", (int)len, msg);
 
-            switch (msg[0])
-            {
-                case 'F':
-                    ESP_LOGI(TAG, "got message length %i: %s", (int)len - 1, &(msg[1]));
-                    if(strcmp(&msg[1], "true") == 0)
-                        comms_val.forward = true;
-                    else
-                        comms_val.forward = false;
-                    break;
-                case 'B':
-                    ESP_LOGI(TAG, "got message length %i: %s", (int)len - 1, &(msg[1]));
-                    if(strcmp(&msg[1], "true") == 0)
-                        comms_val.backward = true;
-                    else
-                        comms_val.backward = false;
-                    break;
-                case 'L':
-                    ESP_LOGI(TAG, "got message length %i: %s", (int)len - 1, &(msg[1]));
-                    if(strcmp(&msg[1], "true") == 0)
-                        comms_val.front_left = true;
-                    else
-                        comms_val.front_left = false;
-                    break;
-                case 'R':
-                    ESP_LOGI(TAG, "got message length %i: %s", (int)len - 1, &(msg[1]));
-                    if(strcmp(&msg[1], "true") == 0)
-                        comms_val.front_right = true;
-                    else
-                        comms_val.front_right = false;
-                    break;
-                case 'A':
-                    ESP_LOGI(TAG, "got message length %i: %s", (int)len - 1, &(msg[1]));
-                    if(strcmp(&msg[1], "true") == 0)
-                        comms_val.back_left = true;
-                    else
-                        comms_val.back_left = false;
-                    break;
-                case 'D':
-                    ESP_LOGI(TAG, "got message length %i: %s", (int)len - 1, &(msg[1]));
-                    if(strcmp(&msg[1], "true") == 0)
-                        comms_val.back_right = true;
-                    else
-                        comms_val.back_right = false;
-                    break;
-                case 'X':
-                    ESP_LOGI(TAG, "got message length %i: %s", (int)len - 1, &(msg[1]));
-                    if(strcmp(&msg[1], "true") == 0)
-                        comms_val.anticlockwise = true;
-                    else
-                        comms_val.anticlockwise = false;
-                    break;
-                case 'C':
-                    ESP_LOGI(TAG, "got message length %i: %s", (int)len - 1, &(msg[1]));
-                    if(strcmp(&msg[1], "true") == 0)
-                        comms_val.clockwise = true;
-                    else
-                        comms_val.clockwise = false;
-                    break;
-                default:
-                    ESP_LOGI(TAG, "got an unknown message with length %i: %s", (int)len, &(msg[1]));
-                    break;
+            // Parse coordinates in format "x1,y1;x2,y2;x3,y3"
+            char *message_copy = malloc(len + 1); // +1 for null terminator
+            if (message_copy == NULL) {
+                ESP_LOGE(TAG, "Failed to allocate memory for message copy");
+                break;
             }
+            
+            // Copy the message to our buffer and ensure null-termination
+            memcpy(message_copy, msg, len);
+            message_copy[len] = '\0';
+            
+            char *saveptr1, *saveptr2;
+            char *pair = strtok_r(message_copy, ";", &saveptr1); // Split by semicolon
+            
+            // Reset coordinate index before processing new batch
+            coord_index = 0;
+            
+            // Process each coordinate pair (x,y)
+            while (pair != NULL && coord_index < MAX_COORDINATES) {
+                // Split pair by comma to get x and y
+                char *x_str = strtok_r(pair, ",", &saveptr2);
+                if (x_str != NULL) {
+                    char *y_str = strtok_r(NULL, ",", &saveptr2);
+                    if (y_str != NULL) {
+                        int x = atoi(x_str);
+                        int y = atoi(y_str);
+                        
+                        // Store the coordinates
+                        coordinates[coord_index][0] = x;
+                        coordinates[coord_index][1] = y;
+                        coord_index++;
+                        
+                        ESP_LOGI(TAG, "Parsed coordinate pair: x=%d, y=%d", x, y);
+                        
+                        // Save the most recent coordinate to comms_val (if needed)
+                        comms_val.x_coord = x;
+                        comms_val.y_coord = y;
+                        comms_val.val_changed = true;
+                    }
+                }
+                
+                // Get next coordinate pair
+                pair = strtok_r(NULL, ";", &saveptr1);
+            }
+            
+            // Send acknowledgment back
+            char ack_msg[64];
+            snprintf(ack_msg, sizeof(ack_msg), "{\"status\":\"received\",\"count\":%d}", coord_index);
+            ws_server_send_text_all(ack_msg, strlen(ack_msg));
+            
+            ESP_LOGI(TAG, "Processed %d coordinate pairs", coord_index);
+            
+            // Free allocated memory
+            free(message_copy);
         }
         break;
     case WEBSOCKET_BIN:
@@ -133,37 +134,40 @@ static void http_server(struct netconn *conn)
     extern const uint8_t root_html_end[] asm("_binary_index_html_end");
     const uint32_t root_html_len = root_html_end - root_html_start;
 
-    netconn_set_recvtimeout(conn, 1000); // allow a connection timeout of 1 second
+    netconn_set_recvtimeout(conn, 10000); // allow a connection timeout of 1 second
     ESP_LOGI(TAG, "reading from client...");
     err = netconn_recv(conn, &inbuf);
     ESP_LOGI(TAG, "read from client");
+
     if (err == ERR_OK)
     {
         netbuf_data(inbuf, (void **)&buf, &buflen);
-        if (buf)
+
+        if (buf && buflen > 0)
         {
-            // default page
-            if (strstr(buf, "GET / ") && !strstr(buf, "Upgrade: websocket"))
+            // Print full request for debugging
+            ESP_LOGI(TAG, "Incoming request:\n%.*s", buflen, buf);
+
+            if (strstr(buf, "Upgrade: websocket"))
             {
-                ESP_LOGI(TAG, "Sending /");
+                // WebSocket upgrade request
+                ESP_LOGI(TAG, "WebSocket upgrade requested.");
+                ws_server_add_client(conn, buf, buflen, "/", websocket_callback);
+                netbuf_delete(inbuf);
+            }
+            else if (strstr(buf, "GET /"))
+            {
+                // Serve the default page
+                ESP_LOGI(TAG, "Serving root HTML page.");
                 netconn_write(conn, HTML_HEADER, sizeof(HTML_HEADER) - 1, NETCONN_NOCOPY);
                 netconn_write(conn, root_html_start, root_html_len, NETCONN_NOCOPY);
                 netconn_close(conn);
                 netconn_delete(conn);
                 netbuf_delete(inbuf);
             }
-
-            // default page websocket
-            else if (strstr(buf, "GET / ") && strstr(buf, "Upgrade: websocket"))
-            {
-                ESP_LOGI(TAG, "Requesting websocket on /");
-                ws_server_add_client(conn, buf, buflen, "/", websocket_callback);
-                netbuf_delete(inbuf);
-            }
-
             else
             {
-                ESP_LOGI(TAG, "Unknown request");
+                ESP_LOGI(TAG, "Unknown request:\n%.*s", buflen, buf);
                 netconn_close(conn);
                 netconn_delete(conn);
                 netbuf_delete(inbuf);
@@ -171,19 +175,20 @@ static void http_server(struct netconn *conn)
         }
         else
         {
-            ESP_LOGI(TAG, "Unknown request (empty?...)");
+            ESP_LOGI(TAG, "Unknown request (empty buffer?)");
             netconn_close(conn);
             netconn_delete(conn);
             netbuf_delete(inbuf);
         }
     }
     else
-    { // if err==ERR_OK
+    {
         ESP_LOGI(TAG, "error on read, closing connection");
         netconn_close(conn);
         netconn_delete(conn);
-        netbuf_delete(inbuf);
-    }
+        if (inbuf)
+            netbuf_delete(inbuf);
+    } 
 }
 
 static void server_task(void *pvParameters)
@@ -251,7 +256,6 @@ void start_websocket_server()
 
     connect_to_wifi();
 
-    // ESP_ERROR_CHECK(init_fs());
     ws_server_start();
     xTaskCreate(&server_task, "server_task", 3000, NULL, 9, NULL);
     xTaskCreate(&server_handle_task, "server_handle_task", 4000, NULL, 6, NULL);

@@ -1,7 +1,7 @@
 # 3D-Cartesian-Bot
 
-This project implements a 3D Cartesian robotic system controlled by an ESP32 microcontroller.  
-It utilizes the ESP32's RMT (Remote Control) peripheral to generate precise stepper motor control signals for 3 NEMA17 motors, enabling smooth motion profiles with acceleration, constant speed, and deceleration phases.  
+This project implements a 3D Cartesian robotic system controlled by an ESP32 microcontroller.
+It utilizes the ESP32's RMT (Remote Control) peripheral to generate precise stepper motor control signals for 3 NEMA17 motors, enabling smooth motion profiles with acceleration, constant speed, and deceleration phases.
 The system is designed for applications requiring precise linear movements, specifically to replicate the motion of surgical incisions used in real-life medical procedures.
 
 The system uses OpenCV to recognize dots on paper, transferring the coordinates to a web interface and then to the ESP32 for controlling stepper motors. The ESP32 posts log statements on the ESP-IDF terminal to simulate motor movements between coordinate sets, replicating the transition between points accurately.

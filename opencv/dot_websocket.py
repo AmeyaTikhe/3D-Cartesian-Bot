@@ -38,7 +38,6 @@ websocket_thread.start()
 # Dot recognition function 
 def dot_recognition(image_path):
     image = cv.imread(image_path)
-    # gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
 
     # Simple blob detection parameters
     params = cv.SimpleBlobDetector_Params()
