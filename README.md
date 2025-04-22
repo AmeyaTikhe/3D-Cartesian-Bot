@@ -18,6 +18,11 @@ The system uses OpenCV to recognize dots on paper, transferring the coordinates 
 
 # Simulation
 
+![OpenCV processed Camera Feed](OPENCV.png)
+
+![Web Server Mock Terminal](WebServer.png)
+
+![ESP-IDF Terminal](ESP-IDF.png)
 
 ---
 
