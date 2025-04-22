@@ -6,23 +6,91 @@ The system is designed for applications requiring precise linear movements, spec
 
 The system uses OpenCV to recognize dots on paper, transferring the coordinates to a web interface and then to the ESP32 for controlling stepper motors. The ESP32 posts log statements on the ESP-IDF terminal to simulate motor movements between coordinate sets, replicating the transition between points accurately.
 
+In the current logic, the OpenCV Python script captures frames from a webcam and detects circular blobs (dots) when the user presses P. Detected dot coordinates are pushed into a queue and sent via a WebSocket server (running on localhost:9000). The HTML page connects to this WebSocket and receives dot coordinates live. These are displayed on the page and stored in an array. After 2 seconds of inactivity, the full list of coordinates is formatted and sent to another WebSocket connection linked to the ESP32 (ws://192.168.x.x/ws). The ESP32 then processes these coordinates for motor movement.
+
+---
+
+## Table of Contents
+1. [Features](#features)
+2. [Simulation](#simulation)
+3. [Step-by-Step Procedure](#step-by-step-procedure)
+    - [Flash the ESP32 Code](#flash-the-esp32-code)
+    - [Connect to Wi-Fi](#connect-to-wi-fi)
+    - [Open the Web Interface](#open-the-web-interface)
+    - [Run the OpenCV Detection](#run-the-opencv-detection)
+    - [Capture Coordinates](#capture-coordinates)
+    - [Exit the Program](#exit-the-program)
+4. [Future Work](#future-work)
+5. [Prerequisites](#prerequisites)
+
 ---
 
 ## Features
 
 - **Smooth Stepper Motor Control**: Generates stepper motor signals with acceleration and deceleration phases using the ESP32's RMT peripheral.
 - **OpenCV Integration**: Utilizes OpenCV for computer vision tasks, potentially enabling features like object detection or path planning.
-- **WebSocket Frontend**: Provides a frontend for user interaction and control.
+- **WebSocket Frontend**: Provides a mock terminal frontend for data tranfer information.
 
 ---
 
-# Simulation
+## Simulation
+
+### OpenCV processed Camera Feed:
 
 ![OpenCV processed Camera Feed](OPENCV.png)
 
+### Web Server Mock Terminal:
+
 ![Web Server Mock Terminal](WebServer.png)
 
+### ESP-IDF Terminal:
+
 ![ESP-IDF Terminal](ESP-IDF.png)
+
+---
+
+
+## Step-by-Step Procedure
+
+1. **Flash the ESP32 Code**
+   - Open the ESP32 WebSocket project in VS Code (using PlatformIO or ESP-IDF).
+   - Build and flash the firmware to the ESP32 using:
+     ```bash
+     idf.py build
+     idf.py -p <your_port> flash
+     ```
+
+2. **Connect to Wi-Fi**
+   - After flashing, monitor the ESP32 output:
+     ```bash
+     idf.py -p <your_port> monitor
+     ```
+   - Note the **local IP address** assigned to the ESP32 (e.g., `192.168.1.123`).
+
+3. **Open the Web Interface**
+   - In the `index.html` file, update the WebSocket IP:
+     ```js
+     let ESPsocket = new WebSocket("ws://192.168.1.123/ws");
+     ```
+   - Open `index.html` in your browser.
+   - It will display a terminal-like interface showing status and coordinates.
+
+4. **Run the OpenCV Detection**
+   - Open `dot_websocket.py` in VS Code or another IDE.
+   - Run it using:
+     ```bash
+     python dot_websocket.py
+     ```
+   - A webcam feed will appear showing the live video.
+
+5. **Capture Coordinates**
+   - Press `P` to capture a frame.
+   - The script detects dot coordinates and sends them to the web browser via WebSocket.
+   - After 2 seconds of inactivity, all collected coordinates are sent to the ESP32.
+
+6. **Exit the Program**
+   - Press `D` in the OpenCV window to stop the script.
+   - Close the browser tab when finished.
 
 ---
 
@@ -35,7 +103,7 @@ The system uses OpenCV to recognize dots on paper, transferring the coordinates 
 
 ---
 
-### Prerequisites
+## Prerequisites
 
 - ESP32 development board.
 - ESP-IDF development environment set up on your system.
