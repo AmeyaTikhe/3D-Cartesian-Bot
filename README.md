@@ -8,6 +8,12 @@ The system uses OpenCV to recognize dots on paper, transferring the coordinates 
 
 In the current logic, the OpenCV Python script captures frames from a webcam and detects circular blobs (dots) when the user presses P. Detected dot coordinates are pushed into a queue and sent via a WebSocket server (running on localhost:9000). The HTML page connects to this WebSocket and receives dot coordinates live. These are displayed on the page and stored in an array. After 2 seconds of inactivity, the full list of coordinates is formatted and sent to another WebSocket connection linked to the ESP32 (ws://192.168.x.x/ws). The ESP32 then processes these coordinates for motor movement.
 
+
+### Please find the GitHub repository for MCP23017–ESP32 interfacing over I2C here:
+🔗 [MCP23017–ESP32 Interfacing Repository](https://github.com/AmeyaTikhe/MCP23017-ESP32Interfacing)
+
+This project demonstrates the implementation of I2C communication between the ESP32 and the MCP23017 I/O expander, including initialization, register read/write operations, and GPIO control.
+
 ---
 
 ## Table of Contents
